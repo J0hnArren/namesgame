@@ -1,4 +1,9 @@
-pymongo~=3.11.4
-unicorn~=1.0.2
-fastapi~=0.65.1
-pydantic~=1.8.2
+certifi==2020.12.5
+chardet==4.0.0
+idna==2.10
+protobuf==3.16.0
+pytils==0.3
+requests==2.25.1
+six==1.16.0
+terra-ai==4.9.59
+urllib3==1.26.4
