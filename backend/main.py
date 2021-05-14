@@ -1,7 +1,7 @@
 import pymongo
 from fastapi import FastAPI, Path
 from fastapi.middleware.cors import CORSMiddleware
-import unicorn
+import uvicorn
 
 #############################
 mongo_host = '127.0.0.1'  # :8000
