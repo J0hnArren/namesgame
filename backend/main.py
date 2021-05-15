@@ -2,7 +2,6 @@ import pymongo
 from fastapi import FastAPI, Path
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from scheme import *
 
 #############################
 mongo_host = '127.0.0.1'  # :8000
@@ -39,9 +38,5 @@ async def somewhat(pk: int = Path(..., gt=0, le=3)):
         message = "Скрывайся у всех на виду"
     return {"pk": message}
 
-# def main():
-#     pass
-#
-#
-# if __name__ == '__main__':
-#     main()
+# if __name__ == "__main__":
+#     uvicorn.run(app, host='127.0.0.1', port=3001)
