@@ -1,13 +1,11 @@
 from pydantic import BaseModel
 
 
-class NamesList(BaseModel):
-    NameID: str
+class NewName(BaseModel):
+    id: str
     # SberID: str
-    Name: str
-    Sex: str
-    Rate: int
+    name: str
 
 
 class UsedNames(BaseModel):
-    NameID: str
+    name_id: str
