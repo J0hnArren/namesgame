@@ -27,8 +27,12 @@ app.add_middleware(
 
 
 @app.get("/get_nickname")
-async def get_nickname():
-    pass
+async def get_nickname(user_id: GetId):
+    result = client.MainNamesDB.used.find_one({"UserId": user_id})
+    if result:
+        return result["UserName"]
+    else:
+        return ""
 
 
 @app.post("/add_used")
