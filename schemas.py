@@ -1,10 +1,9 @@
 from pydantic import BaseModel
 
 
-class NewName(BaseModel):
-    id: str
-    # SberID: str
-    name: str
+class AddUserData(BaseModel):
+    UserId: str
+    Name: str
 
 
 class UsedNames(BaseModel):
