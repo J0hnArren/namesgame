@@ -26,13 +26,19 @@ app.add_middleware(
 )
 
 
-@app.get("/get_nickname")
+@app.get("/")
+async def start_page():
+    return "This is start page, add one of this parameters to the link: /get_nickname, /add_used, /clear_user_info"
+
+
+@app.post("/get_nickname")
 async def get_nickname(user_id: GetId):
-    result = client.MainNamesDB.used.find_one({"UserId": user_id})
-    if result:
-        return result["UserName"]
-    else:
+    result = client.MainNamesDB.used.find_one({"UserId": user_id.Id})
+    if len(result) == 2:
+        client.MainNamesDB.used.insert_one({"UserId": user_id.Id})
         return ""
+    elif result["UserName"]:
+        return result["UserName"]
 
 
 @app.post("/add_used")
@@ -49,23 +55,16 @@ async def add_used(data: AddUserData):
             {"UserId": data["UserId"], "UserName": data["UserName"], "usedNames": [data["Name"]]}
         )
 
-    # print(result)
-    last_right_letter = get_last_symbol(data["Name"]).upper()
-    # print(last_right_letter)
+    last_right_letter = get_last_symbol(data["Name"])
     regx = re.compile(f"^{last_right_letter}", re.IGNORECASE)
-    # regx = re.compile("^А", re.IGNORECASE)
     list_of_names = ""
     try:
         list_of_names = [name["Name"] for name in client.MainNamesDB.names.find({"Name": regx})]
-        # print(list_of_names)
         shuffle(list_of_names)
     except TypeError:
         sleep(0.1)
     unused_names_list = [name for name in list_of_names if name not in result["usedNames"]]
-    # print(result["usedNames"])
-    # print(unused_names_list)
     if len(unused_names_list) != 0:
-        # print(unused_names_list[0])
         result["usedNames"].append(unused_names_list[0])
         client.MainNamesDB.used.update_one({"_id": result["_id"]}, {"$set": result})
         return unused_names_list[0]
@@ -75,24 +74,13 @@ async def add_used(data: AddUserData):
 
 @app.post("/clear_user_info")
 async def clear_user_info(user_id: GetId):
-    client.MainNamesDB.used.delete_one({"UserId": user_id.Id})
+    result = client.MainNamesDB.used.find_one({"UserId": user_id.Id})
+    result["usedNames"] = []
+    client.MainNamesDB.used.update_one({"UserId": user_id.Id}, {"$set": result})
 
 
 def get_last_symbol(new_name):
-    key_letter = ""
-    wrong_chars = "ъыь"
-    for i in range(len(new_name)):
-        is_correct = True
-        for char in wrong_chars:
-            if new_name[::-1][i] == char:
-                is_correct = False
-                break
-        if is_correct:
-            key_letter = new_name[::-1][i]
-            break
-
-    return key_letter
-    # return [char for char in new_name[::-1] if char not in "ъыь"][0].upper()
+    return [char for char in new_name[::-1] if char not in "ъыь"][0].upper()
 
 
 if __name__ == "__main__":

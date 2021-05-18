@@ -8,7 +8,7 @@ class AddUserData(BaseModel):
 
 
 class AddNickname(BaseModel):
-    UserId: str
+    Id: str
     Nickname: str
 
 
