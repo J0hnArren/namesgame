@@ -35,7 +35,7 @@ async def start_page():
 async def get_nickname(user_id: GetId):
     result = client.MainNamesDB.used.find_one({"UserId": user_id.Id, "UserName": {"$exists": True}})
     if result is None:
-        client.MainNamesDB.used.insert_one({"UserId": user_id.Id})
+        client.MainNamesDB.used.insert_one({"UserId": user_id.Id, "usedNames": []})
         return ""
     else:
         return result["UserName"]
@@ -50,11 +50,15 @@ async def manage_nickname(data: ManageNickname):
 async def add_used(data: AddUserData):
     data = dict(data)
     result = client.MainNamesDB.used.find_one({"UserId": data["UserId"]})
-    if result:
+    print(result)
+    try:
         if client.MainNamesDB.names.find_one({"Name": data["Name"]}) is None:
             return "1"
         result["usedNames"].append(data["Name"])
         client.MainNamesDB.used.update_one({"_id": result["_id"]}, {"$set": result})
+    except KeyError as e:
+        print(e)
+        print("Warning: get_nickname method must be used before add_used.")
 
     last_right_letter = get_last_symbol(data["Name"])
     regx = re.compile(f"^{last_right_letter}", re.IGNORECASE)
@@ -67,7 +71,8 @@ async def add_used(data: AddUserData):
         list_of_names = [name["text"] for name in client.MainNamesDB.names_table.find({"text": regx})]
         sleep(0.5)
         shuffle(list_of_names)
-    except BufferError:
+    except BufferError as e:
+        print(e)
         print("Unable to upload any data from MainNamesDB.names_table")
 
     unused_names_list = [name for name in list_of_names if name not in result["usedNames"]]
