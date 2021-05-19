@@ -28,7 +28,10 @@ app.add_middleware(
 
 @app.get("/")
 async def start_page():
-    return "This is start page, add one of this parameters to the link: /get_nickname, /add_used, /clear_user_info"
+    return """
+    This is start page, add one of this parameters to the link: 
+    /get_nickname, /manage_nickname, /add_used, /clear_user_info
+    """
 
 
 @app.post("/get_nickname")
@@ -87,8 +90,10 @@ async def add_used(data: AddUserData):
 @app.post("/clear_user_info")
 async def clear_user_info(user_id: GetId):
     result = client.MainNamesDB.used.find_one({"UserId": user_id.Id})
-    result["usedNames"] = []
-    client.MainNamesDB.used.update_one({"UserId": user_id.Id}, {"$set": result})
+    if result:
+        result["usedNames"] = []
+        client.MainNamesDB.used.update_one({"UserId": user_id.Id}, {"$set": result}, upsert=True)
+    return None
 
 
 def get_last_symbol(new_name):
