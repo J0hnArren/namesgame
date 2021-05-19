@@ -33,12 +33,17 @@ async def start_page():
 
 @app.post("/get_nickname")
 async def get_nickname(user_id: GetId):
-    result = client.MainNamesDB.used.find_one({"UserId": user_id.Id})
-    if len(result) == 2:
+    result = client.MainNamesDB.used.find_one({"UserId": user_id.Id, "UserName": {"$exists": True}})
+    if result is None:
         client.MainNamesDB.used.insert_one({"UserId": user_id.Id})
         return ""
-    elif result["UserName"]:
+    else:
         return result["UserName"]
+
+
+@app.post("/manage_nickname")
+async def manage_nickname(data: ManageNickname):
+    client.MainNamesDB.used.update_one({"UserId": data.UserId}, {"$set": {"UserName": data.Nickname}})
 
 
 @app.post("/add_used")
@@ -46,30 +51,32 @@ async def add_used(data: AddUserData):
     data = dict(data)
     result = client.MainNamesDB.used.find_one({"UserId": data["UserId"]})
     if result:
+        if client.MainNamesDB.names.find_one({"Name": data["Name"]}) is None:
+            return "1"
         result["usedNames"].append(data["Name"])
         client.MainNamesDB.used.update_one({"_id": result["_id"]}, {"$set": result})
-    else:
-        if data["UserName"] == "":
-            data["UserName"] = "Игрок"
-        client.MainNamesDB.used.insert_one(
-            {"UserId": data["UserId"], "UserName": data["UserName"], "usedNames": [data["Name"]]}
-        )
 
     last_right_letter = get_last_symbol(data["Name"])
     regx = re.compile(f"^{last_right_letter}", re.IGNORECASE)
     list_of_names = ""
     try:
-        list_of_names = [name["Name"] for name in client.MainNamesDB.names.find({"Name": regx})]
+        list_of_names = [name["text"] for name in client.MainNamesDB.names_table.find({"text": regx})]
         shuffle(list_of_names)
     except TypeError:
-        sleep(0.1)
+        print("Unable to upload data from MainNamesDB.names_table correctly")
+        list_of_names = [name["text"] for name in client.MainNamesDB.names_table.find({"text": regx})]
+        sleep(0.5)
+        shuffle(list_of_names)
+    except BufferError:
+        print("Unable to upload any data from MainNamesDB.names_table")
+
     unused_names_list = [name for name in list_of_names if name not in result["usedNames"]]
     if len(unused_names_list) != 0:
         result["usedNames"].append(unused_names_list[0])
         client.MainNamesDB.used.update_one({"_id": result["_id"]}, {"$set": result})
         return unused_names_list[0]
-
-    return ""
+    else:
+        return "0"
 
 
 @app.post("/clear_user_info")

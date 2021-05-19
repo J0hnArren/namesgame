@@ -3,12 +3,11 @@ from pydantic import BaseModel
 
 class AddUserData(BaseModel):
     UserId: str
-    UserName: str
     Name: str
 
 
-class AddNickname(BaseModel):
-    Id: str
+class ManageNickname(BaseModel):
+    UserId: str
     Nickname: str
 
 
